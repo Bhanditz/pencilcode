@@ -111,6 +111,11 @@ var debug = window.ide = {
     return {
       panel: embedded ? 'auto' : true
     };
+  },
+  traceEvents: [],
+  trace: function(event) {
+    // This receives events for the new debugger to use.
+    window.ide.traceEvents.push(event);
   }
 };
 

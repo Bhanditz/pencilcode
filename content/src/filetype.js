@@ -67,7 +67,7 @@ function scanHtmlTop(html) {
 
 // The job of this function is to take: HTML, CSS, and script content,
 // and merge them into one HTML file.
-function wrapTurtle(doc, domain, pragmasOnly, setupScript) {
+function wrapTurtle(doc, domain, pragmasOnly, setupScript, instrumenter) {
   // Construct the HTML for running a program.
   var meta = effectiveMeta(doc.meta);
   var html = meta.html || '';
@@ -170,6 +170,11 @@ function wrapTurtle(doc, domain, pragmasOnly, setupScript) {
   }
   var seeline = '\n\n';
   var trailing = '\n';
+  if (instrumenter) {
+    // Instruments the code for debugging, always producing javascript.
+    text = instrumenter(text, maintype);
+    maintype = 'text/javascript';
+  }
   if (/javascript/.test(maintype)) {
     seeline = 'eval(this._start_ide_js_);\n\n';
   } else if (/coffeescript/.test(maintype)) {
@@ -195,10 +200,10 @@ function escapeHtml(s) {
 }
 
 function modifyForPreview(doc, domain,
-       filename, targetUrl, pragmasOnly, sScript) {
+       filename, targetUrl, pragmasOnly, sScript, instrumenter) {
   var mimeType = mimeForFilename(filename), text = doc.data;
   if (mimeType && /^text\/x-pencilcode/.test(mimeType)) {
-    text = wrapTurtle(doc, domain, pragmasOnly, sScript);
+    text = wrapTurtle(doc, domain, pragmasOnly, sScript, instrumenter);
     mimeType = mimeType.replace(/\/x-pencilcode/, '/html');
   } else if (pragmasOnly) {
     var safe = false;
