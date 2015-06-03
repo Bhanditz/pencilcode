@@ -16,7 +16,7 @@ var targetWindow = null;    // window object of the frame being debugged.
 var currentEventIndex = 0;
 var currentDebugId = 0;
 var currentEventIndex = 0;
-var debugRecords = [];
+var debugRecords = {};
 
 
 Error.stackTraceLimit = 20;
@@ -55,13 +55,23 @@ var debug = window.ide = {
   reportEvent: function(name, data) {
     if (!targetWindow) {
       return;
-	  
-	if(name == "appear"){
-		var index = debugRecords[data][1];
-		var location = traceEvents[index].first_line;
+	  }
+	if(name === "appear"){
+		var debugId = data[1]
+		var index = debugRecords[debugId];
+		var location = traceEvents[index].location.first_line
+		console.log("location:", location);
 		traceLine(location);
+
 	}
-    }
+	if(name === "resolve"){
+		var debugId = data[1]
+		var index = debugRecords[debugId];
+		var location = traceEvents[index].location.first_line
+		console.log("location:", location);
+		untraceLine(location);
+
+	}
   
    // come back and update this reportEvent	
    console.log("reportEvent", name, data);
@@ -95,8 +105,7 @@ var debug = window.ide = {
     traceEvents.push(event);
     currentEventIndex = traceEvents.length - 1;
 	currentDebugId = Math.floor(Math.random()*1000); 
-	var record = {currentDebugId : currentEventIndex};
-	debugRecords.push(record);
+	debugRecords[currentDebugId] = currentEventIndex;
 	
 	
   }
@@ -237,6 +246,7 @@ function showDebugMessage(m) {
 
 // Highlights the given line number as a line being traced.
 function traceLine(line) {
+	console.log("traceLine output:", line)
   view.markPaneEditorLine(
       view.paneid('left'), line, 'guttermouseable', true);
   view.markPaneEditorLine(view.paneid('left'), line, 'debugtrace');
