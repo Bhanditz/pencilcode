@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////r
 // DEBUGGER SUPPORT
 ///////////////////////////////////////////////////////////////////////////
+var traceEvents = []; //list of event location objects created by tracing events      
 
 define([
   'jquery',
@@ -75,11 +76,10 @@ var debug = window.ide = {
       panel: embedded ? 'auto' : true
     };
   },
-  traceEvents: [],
   trace: function(event) {
     // This receives events for the new debugger to use.
     window.ide.traceEvents.push(event);
-	currentDebugId++;
+    currentDebugId = traceEvents.length - 1;
   }
 };
 
