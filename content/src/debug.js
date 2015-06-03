@@ -59,7 +59,7 @@ var debug = window.ide = {
 	if(name == "appear"){
 		var index = debugRecords[data][1];
 		var location = traceEvents[index].first_line;
-		traceLine(location)
+		traceLine(location);
 	}
     }
   
