@@ -13,9 +13,15 @@ function($, view, see) {
 eval(see.scope('debug'));
 
 var targetWindow = null;    // window object of the frame being debugged.
+var currentEventIndex = 0;
+var currentDebugId = 0;
+var currentEventIndex = 0;
+var debugRecords = [];
+
 
 Error.stackTraceLimit = 20;
-var currentDebugId = 0;
+
+
 // Resets the debugger state:
 // Remembers the targetWindow, and clears all logged debug records.
 // Calling bindframe also resets firstSessionId, so that callbacks
@@ -35,6 +41,7 @@ var debug = window.ide = {
     // By avoiding using createError()'s thrown exception when we can get
     // a call stack with a simple Error() constructor, we nearly double
     // speed of a fractal program.
+	//return currentEventIndex;
 	return currentDebugId;
   },
   bindframe: bindframe,
@@ -48,12 +55,17 @@ var debug = window.ide = {
   reportEvent: function(name, data) {
     if (!targetWindow) {
       return;
+	  
+	if(name == "appear"){
+		var index = debugRecords[data][1];
+		var location = traceEvents[index].first_line;
+		traceLine(loc)
+	}
     }
-	
-  if (name == 'appear') { debugAppear.apply(null, data); }
   
    // come back and update this reportEvent	
    console.log("reportEvent", name, data);
+   console.log("currentdebugid:", currentDebugId)
   },
   stopButton: function(){
 	  console.log("stopButton");
@@ -78,8 +90,15 @@ var debug = window.ide = {
   },
   trace: function(event) {
     // This receives events for the new debugger to use.
-    window.ide.traceEvents.push(event);
-    currentDebugId = traceEvents.length - 1;
+	console.log("trace");
+	console.log(traceEvents);
+    traceEvents.push(event);
+    currentEventIndex = traceEvents.length - 1;
+	currentDebugId = Math.floor(Math.random()*1000); 
+	var record = {currentDebugId : currentEventIndex};
+	debugRecords.push(record);
+	
+	
   }
 };
 
