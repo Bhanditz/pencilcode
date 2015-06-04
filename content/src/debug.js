@@ -36,7 +36,6 @@ function bindframe(w) {
 // Exported functions from the edit-debug module are exposed
 // as the top frame's "ide" global variable.
 var debug = window.ide = {
-  var record = {},
   nextId: function() {
     // The following line of code is hot under profile and is optimized:
     // By avoiding using createError()'s thrown exception when we can get
@@ -54,24 +53,23 @@ var debug = window.ide = {
     return false;
   },
   reportEvent: function(name, data) {
+    var debugId = data[1];
+    var record = debugRecords[debugId];
+    var index = record.EventIndex;
+    var location = traceEvents[index].location.first_line
+    var coordId = data[3];
+
     if (!targetWindow) {
       return;
 	  }
 	if(name === "appear"){
-		var debugId = data[1]
-		var index = debugRecords[debugId].EventIndex
-		var location = traceEvents[index].location.first_line
-		console.log("location:", location);
-		var indexId = data[3]
+    record.startCoords[coordId] = collectCoords(elem);
 		//debugRecords.debugId.startCoors[indexId] = collectCoors(data[4])
 		traceLine(location);
 
 	}
 	if(name === "resolve"){
-		var debugId = data[1]
-		var index = debugRecords[debugId]."EventIndex"
-		var location = traceEvents[index].location.first_line
-		console.log("location:", location);
+    record.endCoords[coordId] = collectCoords(elem);
 		untraceLine(location);
 
 	}
