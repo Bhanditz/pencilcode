@@ -17,6 +17,8 @@ var currentEventIndex = 0;
 var currentDebugId = 0;
 var currentEventIndex = 0;
 var debugRecords = {};
+var pollTimer = null; 
+var stopButtonShown = 0;
 
 
 Error.stackTraceLimit = 20;
@@ -31,6 +33,7 @@ function bindframe(w) {
   targetWindow = w;  
   view.clearPaneEditorMarks(view.paneid('left'));
   view.notePaneEditorCleanLineCount(view.paneid('left'));
+  startPollingWindow();
 }
 
 // Exported functions from the edit-debug module are exposed
@@ -265,6 +268,19 @@ function collectCoords(elem) {
  }
 }
 
+function displayProtractorForRecord(record) {
+  // TODO: generalize this for turtles that are not in the main field.
+  var origin = targetWindow.jQuery('#field').offset();
+  var step = {
+    startCoords: convertCoords(
+      origin, record.startCoords[record.startCoords.length - 1]),
+    endCoords: convertCoords(
+      origin, record.endCoords[record.endCoords.length - 1]),
+    command: record.method,
+    args: record.args
+  };
+  view.showProtractor(view.paneid('right'), step);
+}
 
 
 // Highlights the given line number as a line being traced.
@@ -374,23 +390,126 @@ view.on('parseerror', function(pane, err) {
 // GUTTER HIGHLIGHTING SUPPORT
 //////////////////////////////////////////////////////////////////////
 view.on('entergutter', function(pane, lineno) {
-	console.log("Got entergutter:", pane, lineno);
+  if (pane != view.paneid('left')) return;
+  if (!(lineno in lineRecord)) return;
+  view.clearPaneEditorMarks(view.paneid('left'), 'debugfocus');
+  view.markPaneEditorLine(view.paneid('left'), lineno, 'debugfocus');
+  displayProtractorForRecord(lineRecord[lineno]);
 });
 
 view.on('leavegutter', function(pane, lineno) {
-	console.log("Got leavegutter:", pane, lineno);
+  view.clearPaneEditorMarks(view.paneid('left'), 'debugfocus');
+  view.hideProtractor(view.paneid('right'));
 });
 
 view.on('icehover', function(pane, ev) {
-	console.log("Got icehover:", pane, ev);
+  view.clearPaneEditorMarks(view.paneid('left'), 'debugfocus');
+  view.hideProtractor(view.paneid('right'));
+
+  if (ev.line == null) return;
+
+  var lineno = ev.line + 1;
+
+  if (pane != view.paneid('left')) return;
+  if (!(lineno in lineRecord)) return;
+
+  view.markPaneEditorLine(view.paneid('left'), lineno, 'debugfocus');
+
+  displayProtractorForRecord(lineRecord[lineno]);
 });
 
 
+var lastRunTime = 0;
+function stopButton(command) {
+  if (command == 'flash') {
+    lastRunTime = +new Date;
+    if (pollTimer) { clearTimeout(pollTimer); pollTimer = null; }
+    if (!stopButtonShown) {
+      view.showMiddleButton('stop');
+      stopButtonShown = 1;
+    }
+    // Within 1.5 seconds, startPollingWindow should be called,
+    // cancelling this timer.  If it is not (for example, if we
+    // are running a plain HTML file or something else that does
+    // not bind to the IDE debugger API), then we just clear
+    // the stop button ourselves.
+    pollTimer = setTimeout(function() {
+      if (stopButtonShown) {
+        view.showMiddleButton('run');
+        stopButtonShown = 0;
+      }
+    }, 1500);
+  }
+  return stopButtonShown;
+}
 
 
+function startPollingWindow() {
+  if (pollTimer) { clearTimeout(pollTimer); pollTimer = null; }
+  if (!targetWindow || !targetWindow.jQuery || !targetWindow.jQuery.turtle ||
+      typeof(targetWindow.jQuery.turtle.interrupt) != 'function') {
+    if (stopButtonShown) {
+      view.showMiddleButton('run');
+      stopButtonShown = 0;
+    }
+    return;
+  }
+  pollTimer = setTimeout(pollForStop, 100);
+}
+
+function stopPollingWindow() {
+  if (pollTimer) { clearTimeout(pollTimer); pollTimer = null; }
+  if (stopButtonShown) {
+    view.showMiddleButton('run');
+    stopButtonShown = 0;
+  }
+}
+
+function pollForStop() {
+  pollTimer = null;
+  if (!targetWindow || !targetWindow.jQuery || !targetWindow.jQuery.turtle ||
+      typeof(targetWindow.jQuery.turtle.interrupt) != 'function' ||
+      document.hidden) {
+    return;
+  }
+  try {
+    var stoppable = targetWindow.jQuery.turtle.interrupt('test');
+  } catch (e) {
+    stoppable = false;
+  }
+  if (stoppable) {
+    if (!stopButtonShown) {
+      stopButtonShown = 1;
+      view.showMiddleButton('stop');
+    }
+  } else {
+    if (stopButtonShown) {
+      stopButtonShown = 0;
+      view.showMiddleButton('run');
+
+      view.publish('execute');
+    }
+  }
+  pollTimer = setTimeout(pollForStop, 100);
+}
+
+document.addEventListener('visibilityChange', function() {
+  if (!document.hidden) { pollForStop(); }
+});
 
 view.on('stop', function() {
-	console.log("Got stop:");
+  if ((new Date) - lastRunTime < 1000) {
+    return;
+  }
+  if (!targetWindow || !targetWindow.jQuery || !targetWindow.jQuery.turtle ||
+      typeof(targetWindow.jQuery.turtle.interrupt) != 'function') {
+    // Do nothing if the program is not something that we can interrupt.
+    return;
+  }
+  try {
+    targetWindow.jQuery.turtle.interrupt();
+  } catch(e) { }
+  stopPollingWindow();
 });
 
 ///////////////////////////////////////////////////////////////////////////
