@@ -53,29 +53,37 @@ var debug = window.ide = {
     return false;
   },
   reportEvent: function(name, data) {
-    var debugId = data[1];
-    var record = debugRecords[debugId];
-    var index = record.EventIndex;
-    var location = traceEvents[index].location.first_line
-    var coordId = data[3];
-
     if (!targetWindow) {
       return;
 	  }
-	if(name === "appear"){
-    record.startCoords[coordId] = collectCoords(elem);
-		//debugRecords.debugId.startCoors[indexId] = collectCoors(data[4])
-		traceLine(location);
 
-	}
-	if(name === "resolve"){
-    record.endCoords[coordId] = collectCoords(elem);
-		untraceLine(location);
+    console.log("reportEvent", name, data);
 
-	}
+	  if(name === "appear"){
+      var debugId = data[1];
+      var record = debugRecords[debugId];
+      var index = record.eventIndex;
+      var location = traceEvents[index].location.first_line
+      var coordId = data[3];
+      var elem = data[4];
+      record.startCoords[coordId] = collectCoords(elem);
+		  traceLine(location);
+  	}
+  	if(name === "resolve"){
+      var debugId = data[1];
+      var record = debugRecords[debugId];
+      var index = record.eventIndex;
+      var location = traceEvents[index].location.first_line
+      var coordId = data[3];
+      var elem = data[4];
+      record.endCoords[coordId] = collectCoords(elem);
+  		untraceLine(location);
+
+  	}
+
   
    // come back and update this reportEvent	
-   console.log("reportEvent", name, data);
+   
    console.log("currentdebugid:", currentDebugId)
   },
   stopButton: function(){
@@ -101,16 +109,15 @@ var debug = window.ide = {
   },
   trace: function(event,data) {
     // This receives events for the new debugger to use.
-	console.log("trace");
+	var record = {eventIndex: null, startCoords: [], endCoords: []};
+  console.log("trace");
 	console.log(traceEvents);
-    traceEvents.push(event);
-    currentEventIndex = traceEvents.length - 1;
+  traceEvents.push(event);
+  currentEventIndex = traceEvents.length - 1;
 	currentDebugId = Math.floor(Math.random()*1000); 
-    record['EventIndex'] = currentEventIndex;
-  	debugRecords[currentDebugId] = record;
+  record.eventIndex = currentEventIndex;
+  debugRecords[currentDebugId] = record;
 	console.log(data)
-	
-	
   }
 };
 
@@ -244,6 +251,19 @@ function showDebugMessage(m) {
   view.evalInRunningPane(view.paneid('right'), script, true);
 }
 
+
+function collectCoords(elem) {
+ try {
+   // TODO: when the element is not a turtle with the standard
+   // parent element positioning, we should do a slower operation to
+   // grab the absolute position and direction.
+   return {
+     transform: elem.style[targetWindow.jQuery.support.transform]
+   };
+ } catch (e) {
+   return null;
+ }
+}
 
 
 
