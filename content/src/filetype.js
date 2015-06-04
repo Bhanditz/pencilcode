@@ -170,15 +170,15 @@ function wrapTurtle(doc, domain, pragmasOnly, setupScript, instrumenter) {
   }
   var seeline = '\n\n';
   var trailing = '\n';
+  if (/javascript/.test(maintype)) {
+    seeline = 'eval(this._start_ide_js_);\n\n';
+  } else if (/coffeescript/.test(maintype)) {
+    seeline = 'eval(this._start_ide_cs_);\n\n';
+  }
   if (instrumenter) {
     // Instruments the code for debugging, always producing javascript.
     text = instrumenter(text, maintype);
     maintype = 'text/javascript';
-  }
-  if (/javascript/.test(maintype)) {
-    seeline = 'eval(this._start_ide_js_);\n\n';
-  } else if (/coffeescript/.test(maintype)) {
-    seeline = 'eval(this._start_ide_cs_)\n\n';
   }
   var mainscript = '<script type="' + maintype + '">\n' + seeline;
   if (!pragmasOnly) {
