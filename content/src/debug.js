@@ -268,20 +268,6 @@ function collectCoords(elem) {
  }
 }
 
-function displayProtractorForRecord(record) {
-  // TODO: generalize this for turtles that are not in the main field.
-  var origin = targetWindow.jQuery('#field').offset();
-  var step = {
-    startCoords: convertCoords(
-      origin, record.startCoords[record.startCoords.length - 1]),
-    endCoords: convertCoords(
-      origin, record.endCoords[record.endCoords.length - 1]),
-    command: record.method,
-    args: record.args
-  };
-  view.showProtractor(view.paneid('right'), step);
-}
-
 
 // Highlights the given line number as a line being traced.
 function traceLine(line) {
@@ -391,10 +377,11 @@ view.on('parseerror', function(pane, err) {
 //////////////////////////////////////////////////////////////////////
 view.on('entergutter', function(pane, lineno) {
   if (pane != view.paneid('left')) return;
-  if (!(lineno in lineRecord)) return;
   view.clearPaneEditorMarks(view.paneid('left'), 'debugfocus');
   view.markPaneEditorLine(view.paneid('left'), lineno, 'debugfocus');
-  displayProtractorForRecord(lineRecord[lineno]);
+
+
+
 });
 
 view.on('leavegutter', function(pane, lineno) {
@@ -403,6 +390,7 @@ view.on('leavegutter', function(pane, lineno) {
 });
 
 view.on('icehover', function(pane, ev) {
+  console.log("ev thing: ", ev);
   view.clearPaneEditorMarks(view.paneid('left'), 'debugfocus');
   view.hideProtractor(view.paneid('right'));
 
@@ -411,11 +399,8 @@ view.on('icehover', function(pane, ev) {
   var lineno = ev.line + 1;
 
   if (pane != view.paneid('left')) return;
-  if (!(lineno in lineRecord)) return;
-
+  
   view.markPaneEditorLine(view.paneid('left'), lineno, 'debugfocus');
-
-  displayProtractorForRecord(lineRecord[lineno]);
 });
 
 
