@@ -16,7 +16,7 @@ var targetWindow = null;    // window object of the frame being debugged.
 var currentEventIndex = 0;
 var currentDebugId = 0;
 var currentEventIndex = 0;
-var debugRecords = [];
+var debugRecords = {};
 
 
 Error.stackTraceLimit = 20;
@@ -36,6 +36,7 @@ function bindframe(w) {
 // Exported functions from the edit-debug module are exposed
 // as the top frame's "ide" global variable.
 var debug = window.ide = {
+  var record = {},
   nextId: function() {
     // The following line of code is hot under profile and is optimized:
     // By avoiding using createError()'s thrown exception when we can get
@@ -58,15 +59,17 @@ var debug = window.ide = {
 	  }
 	if(name === "appear"){
 		var debugId = data[1]
-		var index = debugRecords[debugId];
+		var index = debugRecords[debugId].EventIndex
 		var location = traceEvents[index].location.first_line
 		console.log("location:", location);
+		var indexId = data[3]
+		//debugRecords.debugId.startCoors[indexId] = collectCoors(data[4])
 		traceLine(location);
 
 	}
 	if(name === "resolve"){
 		var debugId = data[1]
-		var index = debugRecords[debugId];
+		var index = debugRecords[debugId]."EventIndex"
 		var location = traceEvents[index].location.first_line
 		console.log("location:", location);
 		untraceLine(location);
@@ -98,17 +101,16 @@ var debug = window.ide = {
       panel: embedded ? 'auto' : true
     };
   },
-  trace: function(event) {
+  trace: function(event,data) {
     // This receives events for the new debugger to use.
 	console.log("trace");
 	console.log(traceEvents);
     traceEvents.push(event);
     currentEventIndex = traceEvents.length - 1;
 	currentDebugId = Math.floor(Math.random()*1000); 
-  var debugRecord = {}
-	debugRecord['DebugId'] = currentDebugId;
-  debugRecord['EventIndex'] = currentEventIndex;
-  debugRecords.push(debugRecord);
+    record['EventIndex'] = currentEventIndex;
+  	debugRecords[currentDebugId] = record;
+	console.log(data)
 	
 	
   }
