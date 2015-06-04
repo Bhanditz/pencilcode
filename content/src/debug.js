@@ -16,7 +16,7 @@ var targetWindow = null;    // window object of the frame being debugged.
 var currentEventIndex = 0;
 var currentDebugId = 0;
 var currentEventIndex = 0;
-var debugRecords = {};
+var debugRecords = [];
 
 
 Error.stackTraceLimit = 20;
@@ -105,7 +105,10 @@ var debug = window.ide = {
     traceEvents.push(event);
     currentEventIndex = traceEvents.length - 1;
 	currentDebugId = Math.floor(Math.random()*1000); 
-	debugRecords[currentDebugId] = currentEventIndex;
+  var debugRecord = {}
+	debugRecord['DebugId'] = currentDebugId;
+  debugRecord['EventIndex'] = currentEventIndex;
+  debugRecords.push(debugRecord);
 	
 	
   }
