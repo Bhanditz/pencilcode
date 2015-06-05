@@ -66,6 +66,10 @@ var debug = window.ide = {
 	  if(name === "appear"){
       var debugId = data[1];
       var record = debugRecordsDebugId[debugId];
+      var eventMethod = data[0]
+      record.method = eventMethod;
+      var eventArgs = data[5];
+      record.args = eventArgs; 
       var index = record.eventIndex;
       var location = traceEvents[index].location.first_line
       var coordId = data[3];
@@ -76,6 +80,8 @@ var debug = window.ide = {
   	if(name === "resolve"){
       var debugId = data[1];
       var record = debugRecordsDebugId[debugId];
+      eventMethod = data[0]
+      record.method = eventMethod;
       var index = record.eventIndex;
       var location = traceEvents[index].location.first_line
       var coordId = data[3];
@@ -113,7 +119,7 @@ var debug = window.ide = {
   },
   trace: function(event,data) {
     // This receives events for the new debugger to use.
-	var record = {eventIndex: null, startCoords: [], endCoords: []};
+	var record = {eventIndex: null, startCoords: [], endCoords: [], method: "", data: ""};
   console.log("trace");
 	console.log(traceEvents);
   traceEvents.push(event);
