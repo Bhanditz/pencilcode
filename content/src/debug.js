@@ -16,7 +16,8 @@ var targetWindow = null;    // window object of the frame being debugged.
 var currentEventIndex = 0;
 var currentDebugId = 0;
 var currentEventIndex = 0;
-var debugRecords = {};
+var debugRecordsDebugId = {};
+var debugRecordsLineNo = {};
 var pollTimer = null; 
 var stopButtonShown = 0;
 
@@ -64,7 +65,7 @@ var debug = window.ide = {
 
 	  if(name === "appear"){
       var debugId = data[1];
-      var record = debugRecords[debugId];
+      var record = debugRecordsDebugId[debugId];
       var index = record.eventIndex;
       var location = traceEvents[index].location.first_line
       var coordId = data[3];
@@ -74,7 +75,7 @@ var debug = window.ide = {
   	}
   	if(name === "resolve"){
       var debugId = data[1];
-      var record = debugRecords[debugId];
+      var record = debugRecordsDebugId[debugId];
       var index = record.eventIndex;
       var location = traceEvents[index].location.first_line
       var coordId = data[3];
@@ -119,7 +120,9 @@ var debug = window.ide = {
   currentEventIndex = traceEvents.length - 1;
 	currentDebugId = Math.floor(Math.random()*1000); 
   record.eventIndex = currentEventIndex;
-  debugRecords[currentDebugId] = record;
+  debugRecordsDebugId[currentDebugId] = record;
+  var lineno = traceEvents[currentEventIndex].location.first_line;
+  debugRecordsLineNo[lineno] = record;
 	console.log(data)
   }
 };
@@ -266,6 +269,41 @@ function collectCoords(elem) {
  } catch (e) {
    return null;
  }
+};
+
+function displayProtractorForRecord(record) {
+  // TODO: generalize this for turtles that are not in the main field.
+  var origin = targetWindow.jQuery('#field').offset();
+  var step = {
+    startCoords: convertCoords(
+      origin, record.startCoords[record.startCoords.length - 1]),
+    endCoords: convertCoords(
+      origin, record.endCoords[record.endCoords.length - 1]),
+    command: record.method,
+    args: record.args
+  };
+  view.showProtractor(view.paneid('right'), step);
+}
+
+// The canonical 2D transforms written by this plugin have the form:
+// translate(tx, ty) rotate(rot) scale(sx, sy) rotate(twi)
+// (with each component optional).
+// This function quickly parses this form into a canonicalized object.
+function parseTurtleTransform(transform) {
+  if (transform === 'none') {
+    return {tx: 0, ty: 0, rot: 0, sx: 1, sy: 1, twi: 0};
+  }
+  // Note that although the CSS spec doesn't allow 'e' in numbers, IE10
+  // and FF put them in there; so allow them.
+  var e = /^(?:translate\(([\-+.\de]+)(?:px)?,\s*([\-+.\de]+)(?:px)?\)\s*)?(?:rotate\(([\-+.\de]+)(?:deg)?\)\s*)?(?:scale\(([\-+.\de]+)(?:,\s*([\-+.\de]+))?\)\s*)?(?:rotate\(([\-+.\de]+)(?:deg)?\)\s*)?$/.exec(transform);
+  if (!e) { return null; }
+  var tx = e[1] ? parseFloat(e[1]) : 0,
+      ty = e[2] ? parseFloat(e[2]) : 0,
+      rot = e[3] ? parseFloat(e[3]) : 0,
+      sx = e[4] ? parseFloat(e[4]) : 1,
+      sy = e[5] ? parseFloat(e[5]) : sx,
+      twi = e[6] ? parseFloat(e[6]) : 0;
+  return {tx:tx, ty:ty, rot:rot, sx:sx, sy:sy, twi:twi};
 }
 
 
@@ -373,13 +411,31 @@ view.on('parseerror', function(pane, err) {
 });
 
 //////////////////////////////////////////////////////////////////////
+// PARSE ERROR HIGHLIGHTING
+//////////////////////////////////////////////////////////////////////
+
+view.on('parseerror', function(pane, err) {
+  if (err.loc) {
+    // The markPaneEditorLine function uses 1-based line numbering.
+    var line = err.loc.line + 1;
+    view.markPaneEditorLine(pane, line, 'debugerror');
+  }
+  if (err.message){
+    showDebugMessage(
+      "<p>Oops, the computer could not show blocks." +
+      "<p>It says:" + err.message.replace(/^.*Error:/i, ''));
+  }
+});
+
+
+//////////////////////////////////////////////////////////////////////
 // GUTTER HIGHLIGHTING SUPPORT
 //////////////////////////////////////////////////////////////////////
 view.on('entergutter', function(pane, lineno) {
   if (pane != view.paneid('left')) return;
   view.clearPaneEditorMarks(view.paneid('left'), 'debugfocus');
   view.markPaneEditorLine(view.paneid('left'), lineno, 'debugfocus');
-
+  displayProtractorForRecord(debugRecordsLineNo[lineno]);
 
 
 });
@@ -387,6 +443,7 @@ view.on('entergutter', function(pane, lineno) {
 view.on('leavegutter', function(pane, lineno) {
   view.clearPaneEditorMarks(view.paneid('left'), 'debugfocus');
   view.hideProtractor(view.paneid('right'));
+
 });
 
 view.on('icehover', function(pane, ev) {
@@ -401,7 +458,21 @@ view.on('icehover', function(pane, ev) {
   if (pane != view.paneid('left')) return;
   
   view.markPaneEditorLine(view.paneid('left'), lineno, 'debugfocus');
+  displayProtractorForRecord(debugRecordsLineNo[lineno]);
 });
+
+function convertCoords(origin, astransform) {
+  if (!origin) { return null; }
+  if (!astransform || !astransform.transform) { return null; }
+  var parsed = parseTurtleTransform(astransform.transform);
+  if (!parsed) return null;
+  return {
+    pageX: origin.left + parsed.tx,
+    pageY: origin.top + parsed.ty,
+    direction: parsed.rot,
+    scale: parsed.sy
+  };
+}
 
 
 var lastRunTime = 0;
