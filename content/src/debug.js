@@ -66,10 +66,7 @@ var debug = window.ide = {
 
 	  if(name === "appear"){
       var debugId = data[1];
-      if(record == null){ //if (!record) console.log('record was null!!!!!');
-        break;
-      }
-      var record = debugRecordsDebugId[debugId];
+       var record = debugRecordsDebugId[debugId];
       var eventMethod = data[0]
       record.method = eventMethod;
       var eventArgs = data[5];
