@@ -77,12 +77,12 @@ describe('code debugger', function() {
     }, function() {
       try {
         // Wait for the preview frame to show
-        if (!$('.preview iframe').length) return;
-        if (!$('.preview iframe')[0].contentWindow.see) return;
+        if (!$('.preview iframe').length) return { poll: 'step 1' };
+        if (!$('.preview iframe')[0].contentWindow.see) return { poll: 'step 2' };
         // Evaluate some expression in the coffeescript evaluation window.
         var seval = $('.preview iframe')[0].contentWindow.see.eval;
         // And also wait for the turtle to start moving.
-        if (seval('getxy()')[1] < 10) return;
+        if (seval('getxy()')[1] < 10) return { poll: 'step 3' };
         return {
           direction: seval('direction()'),
           getxy: seval('getxy()'),

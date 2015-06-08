@@ -57,6 +57,7 @@ var debug = window.ide = {
     return false;
   },
   reportEvent: function(name, data) {
+    console.log('reportEvent', name, data);
     if (!targetWindow) {
       return;
 	  }
@@ -66,6 +67,7 @@ var debug = window.ide = {
 	  if(name === "appear"){
       var debugId = data[1];
       var record = debugRecordsDebugId[debugId];
+if (!record) console.log('record was null!!!!!');
       var eventMethod = data[0]
       record.method = eventMethod;
       var eventArgs = data[5];
