@@ -89,7 +89,10 @@ module.exports = function(grunt) {
           out: 'content/editor.js',
           // optimize: 'none',
           mainConfigFile: 'content/src/editor-main.js',
-          preserveLicenseComments: false
+          preserveLicenseComments: false,
+          uglify: {
+            no_mangle: true
+          }
         }
       }
     },
