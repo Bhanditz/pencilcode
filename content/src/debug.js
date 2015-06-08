@@ -66,10 +66,7 @@ var debug = window.ide = {
 
 	  if(name === "appear"){
       var debugId = data[1];
-      var record = {eventIndex: null, startCoords: [], endCoords: [], method: "", data: ""};
-      if(debugRecordsDebugId[debugId] != null){
-       record = debugRecordsDebugId[debugId];
-      }
+      var record = debugRecordsDebugId[debugId];
       var eventMethod = data[0]
       record.method = eventMethod;
       var eventArgs = data[5];
@@ -84,10 +81,7 @@ var debug = window.ide = {
   	}
   	if(name === "resolve"){
       var debugId = data[1];
-      var record = {eventIndex: null, startCoords: [], endCoords: [], method: "", data: ""};
-      if(debugRecordsDebugId[debugId] != null){
-       record = debugRecordsDebugId[debugId];
-      }
+      var record = debugRecordsDebugId[debugId];
       eventMethod = data[0]
       record.method = eventMethod;
       var index = record.eventIndex;
