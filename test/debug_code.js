@@ -176,7 +176,19 @@ describe('code debugger', function() {
         return {poll: true, error: e};
       }
     }, function(err, result) {
+      assert.ifError(err);
+      // The turtle should not be touching any red pixels.
+      assert.equal(false, result.touchesred);
+      // The turtle should be touching blue pixels that it drew.
+      assert.equal(true, result.touchesblue);
+      // The turtle should not be moving any more.
+      assert.equal(0, result.queuelen);
+      /** TODO: investigate if PhantomJS stack traces can be parsed.
+       * For now, line tracing dosn't work on PhantomJS, so these tests
+       * are disabled.*/
+      // A line of code should be traced.
       assert.equal(1, result.debugtracecount);
+      // The traced code should be around line 4 or beyond.
       assert.ok(parseInt(result.debugtracetop) > 80);
       done();
     });
