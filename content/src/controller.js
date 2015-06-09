@@ -1777,7 +1777,7 @@ function instrumentCode(code, mimetype) {
   if (/javascript/.test(mimetype)) {
     // TODO: support javascript
   } else if (/coffeescript/.test(mimetype)) {
-    code = pencilTracer.instrumentCoffee('', code, {traceFunc: 'ide.trace', compiler: icedCoffeeScript});
+    code = pencilTracer.instrumentCoffee('', code, icedCoffeeScript, {traceFunc: 'ide.trace'});
   }
   return code;
 }
