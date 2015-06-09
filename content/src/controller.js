@@ -1777,7 +1777,11 @@ function instrumentCode(code, mimetype) {
   if (/javascript/.test(mimetype)) {
     // TODO: support javascript
   } else if (/coffeescript/.test(mimetype)) {
-    code = pencilTracer.instrumentCoffee('', code, icedCoffeeScript, {traceFunc: 'ide.trace'});
+    options = {
+      traceFunc: 'ide.trace',
+      bare: true
+    };
+    code = pencilTracer.instrumentCoffee('', code, icedCoffeeScript, options);
   }
   return code;
 }
