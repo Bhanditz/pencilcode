@@ -111,53 +111,11 @@ describe('code debugger', function() {
       done();
     });
   });
-    it('should be able to run the program', function(done) {
-    asyncTest(_page, one_step_timeout, null, function() {
-      // Click on the triangle run button.
-      $('#run').mousedown();
-      $('#run').click();
-    }, function() {
-      try {
-        // Wait for the preview frame to show
-        if (!$('.preview iframe').length) return { poll: 'step 1' };
-        if (!$('.preview iframe')[0].contentWindow.see) return { poll: 'step 2' };
-        // Evaluate some expression in the coffeescript evaluation window.
-        var seval = $('.preview iframe')[0].contentWindow.see.eval;
-        // And also wait for the turtle to start moving.
-        if (seval('getxy()')[1] < 10) return { poll: 'step 3' };
-        return {
-          direction: seval('direction()'),
-          getxy: seval('getxy()'),
-          touchesred: seval('touches red'),
-          touchesblue: seval('touches blue'),
-          queuelen: seval('turtle.queue().length'),
-          stopcount: $('#stop').length
-        };
-      }
-      catch(e) {
-        return {poll: true, error: e};
-      }
-    }, function(err, result) {
-      assert.ifError(err);
-      // The first move is forward....
-      assert.equal(0, result.direction);
-      assert.ok(Math.abs(result.getxy[0] - 0) < 1e-6);
-      // The turtle should not be touching any red pixels.
-      assert.equal(false, result.touchesred);
-      // The turtle should be touching blue pixels that it drew.
-      assert.equal(true, result.touchesblue);
-      // The turtle should still have lots of queued actions.
-      assert.ok(result.queuelen > 0);
-      // The stop button should be showing
-      assert.equal(1, result.stopcount);
-      done();
-    });
-});
-  it('should be able to highlight lines', function(done) {
+  it('should be able to stop the program', function(done) {
     asyncTest(_page, one_step_timeout, null, function() {
       // Click on the square stop button.
-      $('#run').mousedown();
-      $('#run').click();
+      $('#stop').mousedown();
+      $('#stop').click();
     }, function() {
       try {
         if (!$('.preview iframe').length) return;
@@ -166,8 +124,11 @@ describe('code debugger', function() {
         var seval = $('.preview iframe')[0].contentWindow.see.eval;
         // Reset interrupts so that we can evaluate some expressions.
         seval('interrupt("reset")');
-        // Here we should consider 
+        // And also wait for the turtle to start moving.
         return {
+          touchesred: seval('touches red'),
+          touchesblue: seval('touches blue'),
+          queuelen: seval('turtle.queue().length'),
           debugtracecount: $('.debugtrace').length,
           debugtracetop: $('.debugtrace').css('top')
         };
@@ -183,13 +144,14 @@ describe('code debugger', function() {
       assert.equal(true, result.touchesblue);
       // The turtle should not be moving any more.
       assert.equal(0, result.queuelen);
-      /** TODO: investigate if PhantomJS stack traces can be parsed.
+      /* TODO: investigate if PhantomJS stack traces can be parsed.
        * For now, line tracing dosn't work on PhantomJS, so these tests
-       * are disabled.*/
+       * are disabled.
       // A line of code should be traced.
       assert.equal(1, result.debugtracecount);
       // The traced code should be around line 4 or beyond.
       assert.ok(parseInt(result.debugtracetop) > 80);
+      */
       done();
     });
   });
@@ -208,4 +170,4 @@ describe('code debugger', function() {
       done();
     });
   });
-});
+  });
