@@ -146,15 +146,45 @@ describe('code debugger', function() {
       assert.equal(0, result.queuelen);
       /* TODO: investigate if PhantomJS stack traces can be parsed.
        * For now, line tracing dosn't work on PhantomJS, so these tests
-       * are disabled.
+       * are disabled.*/
       // A line of code should be traced.
       assert.equal(1, result.debugtracecount);
       // The traced code should be around line 4 or beyond.
       assert.ok(parseInt(result.debugtracetop) > 80);
-      */
       done();
     });
   });
+    it('should be able to trace program line', function(done) {
+    asyncTest(_page, one_step_timeout, null, function() {
+      // Click on the square stop button.
+      $('#stop').mousedown();
+      $('#stop').click();
+    }, function() {
+      try {
+	    if (!$('.preview iframe').length) return;
+        if (!$('.preview iframe')[0].contentWindow.see) return;
+        // Evaluate some expression in the coffeescript evaluation window.
+        var seval = $('.preview iframe')[0].contentWindow.see.eval;
+        // Reset interrupts so that we can evaluate some expressions.
+        seval('interrupt("reset")');
+        // And also wait for the turtle to start moving.
+        return {
+          debugtracecount: $('.debugtrace').length,
+          debugtracetop: $('.debugtrace').css('top')
+        };
+      }
+      catch(e) {
+        return {poll: true, error: e};
+      }
+    }, function(err, result) {
+      assert.ifError(err);
+      assert.equal(1, result.debugtracecount);
+      // The traced code should be around line 4 or beyond.
+      assert.ok(parseInt(result.debugtracetop) > 80);
+      done();
+    });
+});
+
   it('is done', function(done) {
     asyncTest(_page, one_step_timeout, null, function() {
       // Final cleanup: delete local storage and the cookie.
