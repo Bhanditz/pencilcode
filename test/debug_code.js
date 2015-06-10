@@ -1,3 +1,5 @@
+
+
 var phantom = require('node-phantom-simple'),
     phantomjs = require('phantomjs'),
     assert = require('assert'),
@@ -5,10 +7,67 @@ var phantom = require('node-phantom-simple'),
     one_step_timeout = 8000,
     refreshThen = testutil.refreshThen,
     asyncTest = testutil.asyncTest;
-	
-
 
 describe('code debugger', function() {
+   var simulate = function(type, target, options) {
+    if ('string' == typeof(target)) {
+      target = $(target).get(0);
+    }
+    options = options || {};
+    var pageX = pageY = clientX = clientY = dx = dy = 0;
+    var location = options.location || target;
+    if (location) {
+      if ('string' == typeof(location)) {
+        location = $(location).get(0);
+      }
+      var gbcr = location.getBoundingClientRect();
+      clientX = gbcr.left,
+      clientY = gbcr.top,
+      pageX = clientX + window.pageXOffset;
+      pageY = clientY + window.pageYOffset;
+      dx = Math.floor((gbcr.right - gbcr.left) / 2);
+      dy = Math.floor((gbcr.bottom - gbcr.top) / 2);
+    }
+    if ('dx' in options) dx = options.dx;
+    if ('dy' in options) dy = options.dy;
+    pageX = (options.pageX == null ? pageX : options.pageX) + dx;
+    pageY = (options.pageY == null ? pageY : options.pageY) + dy;
+    clientX = pageX - window.pageXOffset;
+    clientY = pageY - window.pageYOffset;
+    var opts = {
+        bubbles: options.bubbles || true,
+        cancelable: options.cancelable || true,
+        view: options.view || target.ownerDocument.defaultView,
+        detail: options.detail || 1,
+        pageX: pageX,
+        pageY: pageY,
+        clientX: clientX,
+        clientY: clientY,
+        screenX: clientX + window.screenLeft,
+        screenY: clientY + window.screenTop,
+        ctrlKey: options.ctrlKey || false,
+        altKey: options.altKey || false,
+        shiftKey: options.shiftKey || false,
+        metaKey: options.metaKey || false,
+        button: options.button || 0,
+        which: options.which || 1,
+        relatedTarget: options.relatedTarget || null,
+    }
+    var evt;
+    try {
+      // Modern API supported by IE9+
+      evt = new MouseEvent(type, opts);
+	  
+    } catch (e) {
+      // Old API still required by PhantomJS.
+      evt = target.ownerDocument.createEvent('MouseEvents');
+      evt.initMouseEvent(type, opts.bubbles, opts.cancelable, opts.view,
+        opts.detail, opts.screenX, opts.screenY, opts.clientX, opts.clientY,
+        opts.ctrlKey, opts.altKey, opts.shiftKey, opts.metaKey, opts.button,
+        opts.relatedTarget);
+    }
+    target.dispatchEvent(evt);
+}
   var _ph, _page;
   before(function(done) {
     // Create the headless webkit browser.
@@ -134,7 +193,7 @@ describe('code debugger', function() {
           queuelen: seval('turtle.queue().length'),
           debugtracecount: $('.debugtrace').length,
           debugtracetop: $('.debugtrace').css('top'),
-		  hover: simulate('mousedown', $(".ace_gutter-cell").eq(0))
+		//  hover: simulate('mousedown', $(".ace_gutter-cell").eq(0))
         };
       }
       catch(e) {
@@ -163,6 +222,7 @@ describe('code debugger', function() {
       // Click on the square stop button.
       $('#stop').mousedown();
       $('#stop').click();
+	  
     }, function() {
       try {
 	    if (!$('.preview iframe').length) return;
@@ -188,7 +248,93 @@ describe('code debugger', function() {
       done();
     });
 });
+it('should be able to highlight lines when hovered', function(done) {
+	
+ asyncTest(_page, one_step_timeout, null, function() {
+      // Click on the square stop button.
+      $('#run').mousedown();
+      $('#run').click();
+	 window._simulate = function simulate(type, target, options) {
+    	if ('string' == typeof(target)) {
+      	target = $(target).get(0);
+    }
+    options = options || {};
+    var pageX = pageY = clientX = clientY = dx = dy = 0;
+    var location = options.location || target;
+    if (location) {
+      if ('string' == typeof(location)) {
+        location = $(location).get(0);
+      }
+      var gbcr = location.getBoundingClientRect();
+      clientX = gbcr.left,
+      clientY = gbcr.top,
+      pageX = clientX + window.pageXOffset;
+      pageY = clientY + window.pageYOffset;
+      dx = Math.floor((gbcr.right - gbcr.left) / 2);
+      dy = Math.floor((gbcr.bottom - gbcr.top) / 2);
+    }
+    if ('dx' in options) dx = options.dx;
+    if ('dy' in options) dy = options.dy;
+    pageX = (options.pageX == null ? pageX : options.pageX) + dx;
+    pageY = (options.pageY == null ? pageY : options.pageY) + dy;
+    clientX = pageX - window.pageXOffset;
+    clientY = pageY - window.pageYOffset;
+    var opts = {
+        bubbles: options.bubbles || true,
+        cancelable: options.cancelable || true,
+        view: options.view || target.ownerDocument.defaultView,
+        detail: options.detail || 1,
+        pageX: pageX,
+        pageY: pageY,
+        clientX: clientX,
+        clientY: clientY,
+        screenX: clientX + window.screenLeft,
+        screenY: clientY + window.screenTop,
+        ctrlKey: options.ctrlKey || false,
+        altKey: options.altKey || false,
+        shiftKey: options.shiftKey || false,
+        metaKey: options.metaKey || false,
+        button: options.button || 0,
+        which: options.which || 1,
+        relatedTarget: options.relatedTarget || null,
+    }
+    var evt;
+    try {
+      // Modern API supported by IE9+
+      evt = new MouseEvent(type, opts);
+	  
+    } catch (e) {
+      // Old API still required by PhantomJS.
+      evt = target.ownerDocument.createEvent('MouseEvents');
+      evt.initMouseEvent(type, opts.bubbles, opts.cancelable, opts.view,
+        opts.detail, opts.screenX, opts.screenY, opts.clientX, opts.clientY,
+        opts.ctrlKey, opts.altKey, opts.shiftKey, opts.metaKey, opts.button,
+        opts.relatedTarget);
+    }
+    target.dispatchEvent(evt);
+	}
+    }, function() {
+      try {
+		  if (!$('.preview iframe').length) return;
+		  if (!$('.preview iframe')[0].contentWindow.see) return;
+		  if (!$('.ace_gutter-cell').length) return;
+		  window._simulate('mouseover', $(".ace_gutter-cell")[0]);
+		  return{
+			  debugfocus : $(".debugfocus").length
+			  		  
+		  };
+      }
+      catch(e) {
+        return {poll: true, error: e};
+      }
+    }, function(err, result) {
+      assert.ifError(err);
+	  assert.equal(1, result.debugfocus);
+	   
+		done();
+  });
 
+});
   it('is done', function(done) {
     asyncTest(_page, one_step_timeout, null, function() {
       // Final cleanup: delete local storage and the cookie.
