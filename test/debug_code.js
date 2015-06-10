@@ -5,6 +5,8 @@ var phantom = require('node-phantom-simple'),
     one_step_timeout = 8000,
     refreshThen = testutil.refreshThen,
     asyncTest = testutil.asyncTest;
+	
+
 
 describe('code debugger', function() {
   var _ph, _page;
@@ -90,6 +92,7 @@ describe('code debugger', function() {
           touchesblue: seval('touches blue'),
           queuelen: seval('turtle.queue().length'),
           stopcount: $('#stop').length
+		  
         };
       }
       catch(e) {
@@ -130,7 +133,8 @@ describe('code debugger', function() {
           touchesblue: seval('touches blue'),
           queuelen: seval('turtle.queue().length'),
           debugtracecount: $('.debugtrace').length,
-          debugtracetop: $('.debugtrace').css('top')
+          debugtracetop: $('.debugtrace').css('top'),
+		  hover: simulate('mousedown', $(".ace_gutter-cell").eq(0))
         };
       }
       catch(e) {
