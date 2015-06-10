@@ -329,6 +329,7 @@ it('should be able to highlight lines when hovered', function(done) {
       }
     }, function(err, result) {
       assert.ifError(err);
+	 // window._simulate('mouseover', $(".ace_gutter-cell")[0]);
 	  assert.equal(1, result.debugfocus);
 	   
 		done();
