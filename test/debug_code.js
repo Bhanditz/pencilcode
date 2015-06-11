@@ -254,6 +254,8 @@ it('should be able to highlight lines when hovered', function(done) {
       // Click on the square stop button.
       $('#run').mousedown();
       $('#run').click();
+	  /* $('#stop').mousedown();
+	   $('#stop').click();*/
 	 window._simulate = function simulate(type, target, options) {
     	if ('string' == typeof(target)) {
       	target = $(target).get(0);
@@ -315,13 +317,29 @@ it('should be able to highlight lines when hovered', function(done) {
 	}
     }, function() {
       try {
+		  var good = false;
+		  var bad = false;
 		  if (!$('.preview iframe').length) return;
 		  if (!$('.preview iframe')[0].contentWindow.see) return;
 		  if (!$('.ace_gutter-cell').length) return;
+		  $(".ace_gutter-cell").mouseover(function(){
+			  good = true;
+			  
+		  })
+		   $(".ace_gutter-cell").mouseout(function(){
+			  bad = true;
+			  
+		  })
 		  window._simulate('mouseover', $(".ace_gutter-cell")[0]);
+		  
 		  return{
-			  debugfocus : $(".debugfocus").length
-			  		  
+			  badtemp: bad,
+			  temp: good,
+			  debugfocus : $(".debugfocus").length,	
+			  debug: $(".debugfocus").context,
+	          gutters: $(".ace_gutter-cell").length,
+			  elem: $('.ace_gutter-cell')[0],
+		      actual: $(".ace_gutter-cell").eq(0).text()  
 		  };
       }
       catch(e) {
@@ -329,9 +347,14 @@ it('should be able to highlight lines when hovered', function(done) {
       }
     }, function(err, result) {
       assert.ifError(err);
-	 // window._simulate('mouseover', $(".ace_gutter-cell")[0]);
+	//  window._simulate('mouseover', result.elem);
+	  assert.equal(false, result.badtemp);
+	  assert.equal(true, result.temp);
+	  assert.equal(null, result.debug);
+	  assert.ok(parseInt(result.gutters) > 0);
+	  assert.equal(1, parseInt(result.actual));
 	  assert.equal(1, result.debugfocus);
-	   
+	  
 		done();
   });
 
