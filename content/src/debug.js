@@ -3,6 +3,7 @@
 ///////////////////////////////////////////////////////////////////////////
 var traceEvents = []; //list of event location objects created by tracing events      
 
+
 define([
   'jquery',
   'view',
@@ -97,10 +98,13 @@ var debug = window.ide = {
    // come back and update this reportEvent	
    
    console.log("currentdebugid:", currentDebugId)
-  },
-  stopButton: function(){
-	  console.log("stopButton");
-  },
+  }, 
+  
+  stopButton: stopButton,
+
+  /*function(){
+   // console.log("stopbutton");
+  },*/
   getEditorText: function() {
     var doc = view.getPaneEditorData(view.paneid('left'));
     if (doc) {
@@ -484,7 +488,8 @@ function convertCoords(origin, astransform) {
 
 
 var lastRunTime = 0;
-function stopButton(command) {
+function stopButton(command) { console.log("Stopbutton");
+  
   if (command == 'flash') {
     lastRunTime = +new Date;
     if (pollTimer) { clearTimeout(pollTimer); pollTimer = null; }
@@ -502,7 +507,7 @@ function stopButton(command) {
         view.showMiddleButton('run');
         stopButtonShown = 0;
       }
-    }, 1500);
+    }, 2000);
   }
   return stopButtonShown;
 }
