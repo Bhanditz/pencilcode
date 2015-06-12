@@ -46,8 +46,8 @@ var debug = window.ide = {
     // By avoiding using createError()'s thrown exception when we can get
     // a call stack with a simple Error() constructor, we nearly double
     // speed of a fractal program.
-	//return currentEventIndex;
-	return currentDebugId;
+  //return currentEventIndex;
+  return currentDebugId;
   },
   bindframe: bindframe,
   interruptable: function() {
@@ -61,26 +61,31 @@ var debug = window.ide = {
     console.log('reportEvent', name, data);
     if (!targetWindow) {
       return;
-	  }
+    }
 
     console.log("reportEvent", name, data);
 
-	  if(name === "appear"){
+    if(name === "appear"){
       var debugId = data[1];
       var record = debugRecordsDebugId[debugId];
-      var eventMethod = data[0]
-      record.method = eventMethod;
-      var eventArgs = data[5];
-      record.args = eventArgs; 
-      var index = record.eventIndex;
-      var location = traceEvents[index].location.first_line
-      var coordId = data[3];
-      var elem = data[4];
-      record.startCoords[coordId] = collectCoords(elem);
-		  traceLine(location);
+      var eventMethod = data[0];
+      if(!record.method){
+        record.method = eventMethod;
+        var eventArgs = data[5];
+        record.args = eventArgs; 
+        var index = record.eventIndex;
+        var location = traceEvents[index].location.first_line
+        var coordId = data[3];
+        var elem = data[4];
+        record.startCoords[coordId] = collectCoords(elem);
+        traceLine(location);
+      }else{
+        //console.log("console line?");
+        return;
+      }
 
-  	}
-  	if(name === "resolve"){
+    }
+    if(name === "resolve"){
       var debugId = data[1];
       var record = debugRecordsDebugId[debugId];
       eventMethod = data[0]
@@ -90,12 +95,12 @@ var debug = window.ide = {
       var coordId = data[3];
       var elem = data[4];
       record.endCoords[coordId] = collectCoords(elem);
-  		untraceLine(location);
+      untraceLine(location);
 
-  	}
+    }
 
   
-   // come back and update this reportEvent	
+   // come back and update this reportEvent 
    
    console.log("currentdebugid:", currentDebugId)
   }, 
@@ -125,17 +130,17 @@ var debug = window.ide = {
   },
   trace: function(event,data) {
     // This receives events for the new debugger to use.
-	var record = {eventIndex: null, startCoords: [], endCoords: [], method: "", data: ""};
+  var record = {eventIndex: null, startCoords: [], endCoords: [], method: "", data: ""};
   console.log("trace");
-	console.log(traceEvents);
+  console.log(traceEvents);
   traceEvents.push(event);
   currentEventIndex = traceEvents.length - 1;
-	currentDebugId = Math.floor(Math.random()*1000); 
+  currentDebugId = Math.floor(Math.random()*1000); 
   record.eventIndex = currentEventIndex;
   debugRecordsDebugId[currentDebugId] = record;
   var lineno = traceEvents[currentEventIndex].location.first_line;
   debugRecordsLineNo[lineno] = record;
-	console.log(data)
+  console.log(data)
   }
 };
 
@@ -321,7 +326,7 @@ function parseTurtleTransform(transform) {
 
 // Highlights the given line number as a line being traced.
 function traceLine(line) {
-	console.log("traceLine output:", line)
+  console.log("traceLine output:", line)
   view.markPaneEditorLine(
       view.paneid('left'), line, 'guttermouseable', true);
   view.markPaneEditorLine(view.paneid('left'), line, 'debugtrace');
