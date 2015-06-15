@@ -273,7 +273,12 @@ it('should be able to highlight lines when hovered', function(done) {
 		  })
 		  window._simulate('mouseover', $(".ace_gutter-cell")[0]);
 		  
+		  if($(".debugfocus").length == 0){
+			  return;
+		  }
+		  
 		  return{
+			//  poll:"polling",
 			  badtemp: unhovered,
 			  temp: hovered,
 			  debugfocus : $(".debugfocus").length,	
