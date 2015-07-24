@@ -140,17 +140,24 @@ var debug = window.ide = {
   },
   trace: function(event, data) {
     detectStuckProgram();
-    // This receives events for the new debugger to use.
-    currentDebugId += 1;
-    var record = {line: 0, eventIndex: null, startCoords: [], endCoords: [], method: "", data: "", seeeval:false};
-    traceEvents.push(event);
-    currentEventIndex = traceEvents.length - 1;
-    record.eventIndex = currentEventIndex;
-    var lineno = traceEvents[currentEventIndex].location.first_line;
-    view.createSlider(traceEvents, isLoop, screenshots, arrows, view.paneid("left"), debugRecordsByLineNo, targetWindow);
-    record.line = lineno;
-    debugRecordsByDebugId[currentDebugId] = record;
-    debugRecordsByLineNo[lineno] = record;
+
+    if (event.type === 'before' || event.type === 'enter') {
+      currentDebugId += 1;
+      var record = {line: 0, eventIndex: null, startCoords: [], endCoords: [], method: "", data: "", seeeval:false};
+      traceEvents.push(event);
+      currentEventIndex = traceEvents.length - 1;
+      record.eventIndex = currentEventIndex;
+      var lineno = traceEvents[currentEventIndex].location.first_line;
+      view.createSlider(traceEvents, isLoop, screenshots, arrows, view.paneid("left"), debugRecordsByLineNo, targetWindow);
+      record.line = lineno;
+      debugRecordsByDebugId[currentDebugId] = record;
+      debugRecordsByLineNo[lineno] = record;
+    } else if (event.type === 'after') {
+
+    } else if (event.type === 'leave') {
+      // This event happens when a function is left, and contains the return
+      // value or thrown error. We aren't using this event for now.
+    }
   },
   setSourceMap: function (map) {
     currentSourceMap = map;
