@@ -143,6 +143,7 @@ window.pencilcode.view = {
   setPrimaryFocus: setPrimaryFocus,
   arrow:arrow,
   showVariables: showVariables,
+  showAllVariablesAt: showAllVariablesAt,
   removeVariables: removeVariables,
   // setPaneRunUrl: setPaneRunUrl,
   hideEditor: function(pane) {
@@ -242,7 +243,7 @@ function removePlay () {
         playButton = false;
 }
 var linenoList = [];
-function createSlider(traceevents, loop, screenshots, all_arrows, pane, debugRecordsByLineNo, target){
+function createSlider(traceevents, loop, screenshots, all_arrows, variablesByLineNo, pane, debugRecordsByLineNo, target){
     $(".scrubbermark").css("visibility", "visible");
 //  var previous_line = 0;
   var current_line = 0;
@@ -254,10 +255,6 @@ function createSlider(traceevents, loop, screenshots, all_arrows, pane, debugRec
   var firstLabel = (1).toString();
   var secondLabel = (traceevents.length).toString();
   
-if (traceevents[traceevents.length - 1].type == "enter" || traceevents[traceevents.length-1].type == "leave") {
-      traceevents.pop();
-
-  }
   if (!sliderCreated) {
      linenoList = []
   } 
@@ -291,6 +288,8 @@ if (traceevents[traceevents.length - 1].type == "enter" || traceevents[traceeven
          // Drawing arrows at each step in the slider
         arrow(pane, all_arrows, current_line);
 
+        // Show variables for each line for this step in the slider.
+        showAllVariablesAt(current_line, variablesByLineNo);
 
         // display the protractor for that new line and highlight the selected line
         hideProtractor(paneid('right'));
@@ -3383,46 +3382,69 @@ function showVariables(pane, lineNum, vars, functionCalls) {
     if (!getPaneEditorBlockMode(pane)) { block_mode = false; }
   }
 
-  if (vars.length > 0 || functionCalls.length > 0) {
-    if (block_mode) {
-      var dropletEditor = state.pane[pane].dropletEditor;
-      var bounds = dropletEditor.getLineMetrics(lineNum - 1);
-      coords = {pageX: bounds.bounds.x, pageY: bounds.bounds.y};
-    } else {
-      var lastColumn = state.pane[pane].editor.env.document.getLine(lineNum - 1).length - 1;
-      coords = state.pane[pane].editor.renderer.textToScreenCoordinates(lineNum - 1, lastColumn + 10);
-      offsetTop = $(".editor").offset().top;
-    }
+  if (block_mode) {
+    var dropletEditor = state.pane[pane].dropletEditor;
+    var bounds = dropletEditor.getLineMetrics(lineNum - 1);
+    coords = {pageX: bounds.bounds.x, pageY: bounds.bounds.y};
+  } else {
+    var lastColumn = state.pane[pane].editor.env.document.getLine(lineNum - 1).length - 1;
+    coords = state.pane[pane].editor.renderer.textToScreenCoordinates(lineNum - 1, lastColumn + 10);
+    offsetTop = $(".editor").offset().top;
+  }
 
-    var text = "";
-    for (var i = 0; i < vars.length; i++) {
-      text += vars[i].name + "=" + htmlEscape(vars[i].value) + " ";
-    }
-    for (var i = 0; i < functionCalls.length; i++) {
-      text += functionCalls[i].name + "()=" + htmlEscape(functionCalls[i].value) + " ";
-    }
+  var text = "";
+  for (var i = 0; i < vars.length; i++) {
+    text += vars[i].name + "=" + htmlEscape(vars[i].value) + " ";
+  }
+  for (var i = 0; i < functionCalls.length; i++) {
+    text += functionCalls[i].name + "()=" + htmlEscape(functionCalls[i].value) + " ";
+  }
 
-    var divId = "line" + lineNum + "vars";
-    if ($("#" + divId).length) {
-      $("#" + divId).html(text);
-    } else {
-      var div = document.createElement('div');
-      div.id = divId;
-      div.className = "vars";
-      div.innerHTML = text;
-      div.style.visibility = 'visible';
-      div.style.position = "absolute";
-      div.style.zIndex = "10";
-      div.style.right = "0";
-      div.style.top = String(coords.pageY - offsetTop) + "px";
+  var divId = "line" + lineNum + "vars";
+  if ($("#" + divId).length) {
+    $("#" + divId).html(text);
+  } else {
+    var div = document.createElement('div');
+    div.id = divId;
+    div.className = "vars";
+    div.innerHTML = text;
+    div.style.visibility = 'visible';
+    div.style.position = "absolute";
+    div.style.zIndex = "10";
+    div.style.right = "0";
+    div.style.top = String(coords.pageY - offsetTop) + "px";
 
-      $(".editor").append(div);
-    }
+    $(".editor").append(div);
   }
 }
 
 function removeVariables() {
   $(".editor > .vars").remove();
+}
+
+function showVariablesFor(lineNum, eventIndex, variablesByLineNo) {
+  var vars = [];
+  var functionCalls = [];
+
+  // Find what the state of the tracked variables were at this eventIndex.
+  if (variablesByLineNo[lineNum]) {
+    for (var i = 0; i < variablesByLineNo[lineNum].length; i++) {
+      var entry = variablesByLineNo[lineNum][i];
+      if (entry.eventIndex > eventIndex) {
+        break;
+      }
+      vars = entry.vars;
+      functionCalls = entry.functionCalls;
+    }
+  }
+
+  showVariables(paneid('left'), lineNum, vars, functionCalls);
+}
+
+function showAllVariablesAt(eventIndex, variablesByLineNo) {
+  for (var lineNum in variablesByLineNo) {
+    showVariablesFor(lineNum, eventIndex, variablesByLineNo);
+  }
 }
 
 window.FontLoader = FontLoader;

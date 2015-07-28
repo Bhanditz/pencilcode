@@ -145,18 +145,20 @@ var debug = window.ide = {
   trace: function(event, data) {
     detectStuckProgram();
 
-    if (event.type === 'before' || event.type === 'after' || event.type === 'enter') {
+    if (event.type === 'before' || event.type === 'enter') {
       currentDebugId += 1;
       var record = {line: 0, eventIndex: null, startCoords: [], endCoords: [], method: "", data: "", seeeval:false};
       traceEvents.push(event);
       currentEventIndex = traceEvents.length - 1;
       record.eventIndex = currentEventIndex;
       var lineno = traceEvents[currentEventIndex].location.first_line;
-      view.createSlider(traceEvents, isLoop, screenshots, arrows, view.paneid("left"), debugRecordsByLineNo, targetWindow);
+      view.createSlider(traceEvents, isLoop, screenshots, arrows, variablesByLineNo, view.paneid("left"), debugRecordsByLineNo, targetWindow);
       record.line = lineno;
       debugRecordsByDebugId[currentDebugId] = record;
       debugRecordsByLineNo[lineno] = record;
-      updateVariables(event.location.first_line, currentEventIndex, event.vars, event.functionCalls || []);
+      updateVariables(event.location.first_line, currentEventIndex, event.vars, []);
+    } else if (event.type === 'after') {
+      updateVariables(event.location.first_line, currentEventIndex, event.vars, event.functionCalls);
     }
   },
   setSourceMap: function (map) {
@@ -229,25 +231,6 @@ function valueToString(value) {
   }
 }
 
-function showVariablesFor(lineNum, eventIndex) {
-  var vars = [];
-  var functionCalls = [];
-
-  // Find what the state of the tracked variables were at this eventIndex.
-  if (variablesByLineNo[lineNum]) {
-    for (var i = 0; i < variablesByLineNo[lineNum].length; i++) {
-      var entry = variablesByLineNo[lineNum][i];
-      if (entry.eventIndex > eventIndex) {
-        break;
-      }
-      vars = entry.vars;
-      functionCalls = entry.functionCalls;
-    }
-  }
-
-  view.showVariables(view.paneid('left'), lineNum, vars, functionCalls);
-}
-
 //////////////////////////////////////////////////////////////////////
 // ERROR MESSAGE HINT SUPPORT
 //////////////////////////////////////////////////////////////////////
@@ -313,8 +296,6 @@ function reportAppear(method, debugId, length, coordId, elem, args){
 
       //trace lines that are not animation.
       while (currentIndex != index){
-        showVariablesFor(currentLine, currentIndex);
-
         if (prevIndex != -1) {
           var prevLocation = traceEvents[prevIndex].location;
           var prevLine = prevLocation.first_line;
@@ -379,7 +360,7 @@ function reportAppear(method, debugId, length, coordId, elem, args){
       recordD.startCoords[coordId] = collectCoords(elem);
       recordL.startCoords[coordId] = collectCoords(elem);
       traceLine(line);
-      showVariablesFor(line, index);
+      view.showAllVariablesAt(index, variablesByLineNo);
     }
   }
 }
@@ -405,11 +386,10 @@ function end_program(){
   //goes back and traces unanimated lines at the end of programs.
   var currentLine = -1; 
   var tracedLine = -1;
+  var justEnded = (currentIndex < traceEvents.length);
   while (currentIndex < traceEvents.length){
     currentLine = traceEvents[currentIndex].location.first_line;
     var currentLocation = traceEvents[currentIndex].location;
-
-    showVariablesFor(currentLine, currentIndex);
 
    if (prevIndex != -1) {
       var prevLocation = traceEvents[prevIndex].location;
@@ -452,6 +432,9 @@ function end_program(){
         tracedLine = -1;
   }
   prevLine = -1;
+  if (justEnded) {
+    view.showAllVariablesAt(currentIndex, variablesByLineNo);
+  }
 }
 
 function errorAdvice(msg, text) {
