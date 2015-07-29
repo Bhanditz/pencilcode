@@ -3,9 +3,7 @@
 ///////////////////////////////////////////////////////////////////////////
 
 var $              = require('jquery'),
-    jqueryui       = require('jquery-ui'),
-    jqueryuisliderpips = require('jquery-ui-slider-pips'),
-    nouislider = require('nouislider'),
+    noUiSlider = require('noUiSlider'),
     filetype       = require('filetype'),
     tooltipster    = require('tooltipster'),
     see            = require('see'),
@@ -242,7 +240,7 @@ var previous_line = 0;
 
 function change(event, ui, traceevents, debugRecordsByLineNo, target, pane, all_arrows ) {
   // need this previous line for the forward and back buttons to work
-  var prevno = traceevents[previous_line].location.first_line;
+  /*var prevno = traceevents[previous_line].location.first_line;
   clearPaneEditorLine(paneid('left'), prevno, 'debugtrace');
 
   // after clearing, set the current line to the selected ui value
@@ -265,7 +263,7 @@ function change(event, ui, traceevents, debugRecordsByLineNo, target, pane, all_
   }
   markPaneEditorLine(
       paneid('left'), lineno, 'guttermouseable', true);
-      markPaneEditorLine(paneid('left'), lineno, 'debugtrace');
+      markPaneEditorLine(paneid('left'), lineno, 'debugtrace');*/
 }
 
 function initializeSlider (traceevents, all_arrows, pane, debugRecordsByLineNo, target) {
@@ -290,13 +288,29 @@ function initializeSlider (traceevents, all_arrows, pane, debugRecordsByLineNo, 
     forwardDiv.innerHTML = "<button  id = 'forwardButton'> Forward One Step </button>";
     $(".scrubber").append(forwardDiv); 
     
-    var label = document.createElement('div');
+   /* var label = document.createElement('div');
     label.id = 'label';
     label.innerHTML = "<input type = 'text' readonly style= 'font-weight:bold'>";
-    $(".scrubber").append(label);
+    $(".scrubber").append(label);*/
 
+
+
+    noUiSlider.create(slider, {
+      start: [current_line],
+      range: {
+        'min': [0],
+        'max': [traceevents.length - 1]
+      },
+      step: 1,
+      animate: true,
+      pips: {
+        mode: 'steps',
+        density: 3
+
+      }
+    })
     // Code for the slider 
-    $(function() {
+   /* $(function() {
      $("#slider").slider({
         min: 0,
         max: traceevents.length - 1,
@@ -320,8 +334,8 @@ function initializeSlider (traceevents, all_arrows, pane, debugRecordsByLineNo, 
           labels: linenoList,
           prefix: "Line " 
         })
-    });
-    $('#label').text('Step ' + ($("#slider").slider("value") + 1) + ' of ' + traceevents.length + ' Steps');
+    });*/
+  //  $('#label').text('Step ' + ($("#slider").slider("value") + 1) + ' of ' + traceevents.length + ' Steps');
 
 }
 
@@ -329,10 +343,6 @@ function createSlider(traceevents, all_arrows, pane, debugRecordsByLineNo, targe
 
   $(".scrubbermark").css("visibility", "visible");
   
-  if (traceevents[traceevents.length - 1].type == "enter" || traceevents[traceevents.length-1].type == "leave") {
-    traceevents.pop();
-  }
-
   // reset the list of line numbers before pushing a new number 
   if (!sliderCreated) {
      linenoList = [];
@@ -346,7 +356,7 @@ function createSlider(traceevents, all_arrows, pane, debugRecordsByLineNo, targe
   // If slider hasn't been created and there are events being pushed, create slider. 
   if (!sliderCreated && traceevents.length > 0) {
     initializeSlider (traceevents, all_arrows, pane, debugRecordsByLineNo, target);
-    $('#backButton').on('click', function() {
+   /* $('#backButton').on('click', function() {
       if (current_line != 0) {
         current_line--;
         $("#slider").slider("value",current_line);
@@ -358,11 +368,11 @@ function createSlider(traceevents, all_arrows, pane, debugRecordsByLineNo, targe
         current_line++
         $("#slider").slider("value", current_line);
       }
-    });
+    });*/ 
 
     // keep as variable so number of pips and maximum can be modified as events are pushed
-   var max = $("#slider").slider("option", "max");
-    var pips = $("#slider").slider("option", "pips");
+  /* var max = $("#slider").slider("option", "max");
+    var pips = $("#slider").slider("option", "pips");*/ 
 
     // the slider has been created
     sliderCreated = true;
@@ -370,7 +380,25 @@ function createSlider(traceevents, all_arrows, pane, debugRecordsByLineNo, targe
 
   // if the slider has already been created and events are pushed, modify existing slider
    if(sliderCreated){
-    $("#slider").slider("option", "max", traceevents.length - 1)
+    var slider = document.getElementById('slider');
+    slider.noUiSlider.destroy();
+    noUiSlider.create(slider, {
+      start: [current_line],
+      range: {
+        'min': [0],
+        'max': [traceevents.length - 1]
+      },
+      animate: true,
+      pips: {
+        mode: 'steps',
+        density: 3
+
+      }
+
+
+    })
+
+  /*  $("#slider").slider("option", "max", traceevents.length - 1)
     $("#slider").slider("pips",{ 
       first: "pip",
       rest: "pip",
@@ -379,8 +407,8 @@ function createSlider(traceevents, all_arrows, pane, debugRecordsByLineNo, targe
     .slider("float", { 
            labels: linenoList,
            prefix: "Line  "
-    })
-     $('#label').text('Step ' + ($("#slider").slider("value") + 1) + ' of ' + traceevents.length + ' Steps');
+    })*/
+   //  $('#label').text('Step ' + ($("#slider").slider("value") + 1) + ' of ' + traceevents.length + ' Steps');
 
   }
 }
