@@ -1562,6 +1562,10 @@ function paletteForPane(paneState, selfname) {
         mimeType == 'application/x-javascript') {
       basePalette = palette.JAVASCRIPT_PALETTE;
     }
+    if (/x-python/.test(mimeType)) {
+        basePalette = palette.PYTHON_PALETTE;
+    }
+
     if (mimeType.replace(/;.*$/, '') == 'text/html') {
       basePalette = palette.HTML_PALETTE;
     }
@@ -1573,6 +1577,13 @@ function paletteForPane(paneState, selfname) {
 }
 
 function dropletOptionsForMimeType(mimeType) {
+  if (/x-python/.test(mimeType)) {
+    return {
+      functions: palette.KNOWN_PYTHON_FUNCTIONS,
+      categories: palette.PYTHON_CATEGORIES
+    };
+  }
+
   return {
     functions: palette.KNOWN_FUNCTIONS,
     categories: palette.CATEGORIES
@@ -2564,7 +2575,7 @@ function setupAceEditor(pane, elt, editor, mode, text) {
 }
 
 function mimeTypeSupportsBlocks(mimeType) {
-  return /x-pencilcode|coffeescript|javascript|html/.test(mimeType);
+  return /x-pencilcode|coffeescript|javascript|x-python|html/.test(mimeType);
 }
 
 function setPaneEditorLanguageType(pane, type) {
